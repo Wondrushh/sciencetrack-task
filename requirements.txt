@@ -1,3 +1,4 @@
 Django==4.2.14
 djangorestframework
 black==24.4.2
+pytz
