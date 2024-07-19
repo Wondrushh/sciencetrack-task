@@ -7,9 +7,11 @@ from rest_framework.response import Response
 from .models import Author, Book
 from .serializers import AuthorSerializer, BookSerializer
 
+
 class AuthorViewSet(ModelViewSet):
     queryset = Author.objects.all().order_by("-add_date")
     serializer_class = AuthorSerializer
+
 
 class BookViewSet(ModelViewSet):
     queryset = Book.objects.all().order_by("-add_date")
