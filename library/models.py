@@ -8,7 +8,7 @@ class Author(models.Model):
     last_name = models.CharField(max_length=70)
     birth_date = models.DateField()
     add_date = models.DateTimeField("date added", auto_now_add=True)
-    
+
     def __str__(self) -> str:
         return f"{self.first_name} {self.last_name}"
 
@@ -19,6 +19,6 @@ class Book(models.Model):
     pub_date = models.DateField("date published")
     authors = models.ManyToManyField(Author)
     add_date = models.DateTimeField("date added", auto_now_add=True)
-    
+
     def __str__(self) -> str:
         return self.title
