@@ -10,10 +10,10 @@ class PastDateTime:
         # TODO: This is probably wrong... Look at the docs
         if isinstance(timestamp, datetime.date):
             timestamp = datetime.datetime.combine(timestamp, datetime.time())
-            tz = pytz.timezone("Europe/Prague")
-            timestamp = tz.localize(timestamp)
+            # tz = pytz.timezone("Europe/Prague")
+            # timestamp = tz.localize(timestamp)
 
-        if(timestamp > datetime.datetime.now(pytz.timezone("Europe/Prague"))):
+        if(timestamp > datetime.datetime.now()):
             raise ValidationError("The datetime must be in the past.")
         
     
