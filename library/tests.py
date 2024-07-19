@@ -38,6 +38,18 @@ class AuthorEndpointTests(APITestCase):
 
         self.assertEqual(response.data["results"], serializer.data)
 
+    def test_get_one_author(self):
+        """Test fetching books and comparing it with the DB data."""
+        url = reverse("author-detail", args=[1])
+        request = self.factory.get(url)
+        request.user = self.user
+
+        response = self.client.get(url)
+        authors = Author.objects.get(pk=1)
+        serializer = AuthorSerializer(authors, context={"request": request})
+
+        self.assertEqual(response.data, serializer.data)
+
     def test_is_birth_date_in_the_past(self):
         """The birth date of the author should be in the past."""
         new_author = {
@@ -81,6 +93,18 @@ class BookEndpointTests(APITestCase):
         serializer = BookSerializer(books, many=True, context={"request": request})
 
         self.assertEqual(response.data["results"], serializer.data)
+
+    def test_get_one_book(self):
+        """Test fetching books and comparing it with the DB data."""
+        url = reverse("book-detail", args=[1])
+        request = self.factory.get(url)
+        request.user = self.user
+
+        response = self.client.get(url)
+        books = Book.objects.get(pk=1)
+        serializer = BookSerializer(books, context={"request": request})
+
+        self.assertEqual(response.data, serializer.data)
 
     def test_is_pub_date_in_the_past(self):
         """The birth date of the author should be in the past."""
