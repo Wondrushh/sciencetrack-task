@@ -54,7 +54,11 @@ class BookEndpointTests(APITestCase):
         self.client.login(username="admin", password="admin")
 
         # Create some testing db objects
+        self.author = Author.objects.create(first_name="Alois", last_name="Jirásek", birth_date="1886-01-01")
         self.book = Book.objects.create(title="Psohlavci", isbn="9788073901295", pub_date="2014-07-07")
+        
+        # Assign the author to the book
+        self.book.authors.set([self.author])
         return super().setUp()
     
     def test_get_books(self):
@@ -77,7 +81,49 @@ class BookEndpointTests(APITestCase):
             "title": "Somebook",
             "isbn": "9788073901295",
             "pub_date": "2222-01-01",
+            "authors": ["/api/authors/1/"]
         }
         url = reverse("book-list")
 
         self.assertEqual(self.client.post(url, new_book, format="json").status_code, 400) 
+
+    def test_isbn_validation(self):
+        """The ISBN should be valid."""
+        new_book = {
+            "title": "Somebook",
+            "isbn": "9788073901295",
+            "pub_date": "2014-07-07",
+            "authors": ["/api/authors/1/"]
+        }
+        url = reverse("book-list")
+        response = self.client.post(url, new_book)
+        
+        self.assertEqual(response.status_code, 201)
+
+    def test_isbn_validation_invalid(self):
+        """The ISBN should be invalid"""
+        new_book = {
+            "title": "Somebook",
+            "isbn": "9788073901296",
+            "pub_date": "2014-07-07",
+            "authors": ["/api/authors/1/"]
+        }
+        url = reverse("book-list")
+        response = self.client.post(url, new_book)
+        
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data["isbn"][0], "Invalid ISBN.")
+        
+    def test_remove_hyphens_from_isbn(self):
+        """The BookSerializer should remove the hyphens from the ISBN before saving it."""
+        new_book = {
+            "title": "Somebook",
+            "isbn": "978-8073901295",
+            "pub_date": "2014-07-07",
+            "authors": ["/api/authors/1/"]
+        }
+        url = reverse("book-list")
+        response = self.client.post(url, new_book)
+        
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["isbn"], "9788073901295")
