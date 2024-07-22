@@ -8,6 +8,7 @@ from rest_framework.test import APIRequestFactory, APITestCase, force_authentica
 from rest_framework.validators import ValidationError
 from rest_framework.parsers import JSONParser
 from rest_framework import status
+from rest_framework.filters import SearchFilter
 
 from .views import AuthorViewSet
 from .models import Author, Book
@@ -104,6 +105,25 @@ class AuthorEndpointTests(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(the_author.first_name, new_author["first_name"])
+
+    def test_generic_filter_contains(self):
+        """Test the generic filter with the contains filter."""
+        # Add another author to the DB with a different name
+        new_author = {
+            "first_name": "Karel",
+            "last_name": "Čapek",
+            "birth_date": "1890-01-09",
+        }
+        Author.objects.create(**new_author)
+
+        url = reverse("author-list")
+        request = self.factory.get(url, data={"first_name__contains": "Alois"})
+
+        response = self.client.get(url, data={"first_name__contains": "Alois"})
+        authors = Author.objects.filter(first_name__contains="Alois")
+        serializer = AuthorSerializer(authors, many=True, context={"request": request})
+
+        self.assertEqual(response.data["results"], serializer.data)
 
     def test_is_birth_date_in_the_past(self):
         """The birth date of the author should be in the past."""
@@ -216,6 +236,35 @@ class BookEndpointTests(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(the_book.title, new_book["title"])
+
+    def test_generic_filter_contains(self):
+        """Test the generic filter with the contains filter."""
+        # Add another author to the DB with a different name
+        new_book = {
+            "title": "Somebook",
+            "isbn": "9788073901295",
+            "pub_date": "2014-07-07",
+        }
+
+        new_book_authors = {
+            "authors": ["/api/authors/1/"],
+        }
+
+        new_book_obj = Book.objects.create(**new_book)
+        new_book_obj.authors.set([self.author])
+
+        # Assign the author to the book
+        self.book.authors.set([self.author])
+
+        url = reverse("book-list")
+        queryparam = {"title__contains": "Some"}
+        request = self.factory.get(url, data=queryparam)
+
+        response = self.client.get(url, data=queryparam)
+        books = Book.objects.filter(**queryparam)
+        serializer = BookSerializer(books, many=True, context={"request": request})
+
+        self.assertEqual(response.data["results"], serializer.data)
 
     def test_is_pub_date_in_the_past(self):
         """The birth date of the author should be in the past."""
