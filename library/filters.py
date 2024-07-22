@@ -5,7 +5,10 @@ from rest_framework.filters import BaseFilterBackend
 
 
 class SimpleGenericFilter(BaseFilterBackend):
-    """A simple generic filter backend for Django Rest Framework ViewSets."""
+    """A simple generic filter backend for Django Rest Framework ViewSets.
+    It could also be done through django_filters package, but this is a simple
+    implementation for demonstration purposes.
+    """
 
     def filter_queryset(self, request: Request, queryset: QuerySet, view) -> QuerySet:
         """Filters the queryset based on query parameters.

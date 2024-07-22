@@ -46,5 +46,5 @@ docker run -p 8000:8000 library-management
 Run the following command to execute tests:
 
 ```bash
-python manage.py test
+python manage.py test library
 ```
