@@ -9,20 +9,13 @@ from .serializers import AuthorSerializer, BookSerializer
 from .filters import SimpleGenericFilter
 
 
-class AuthorViewSet(ModelViewSet, SimpleGenericFilter):
+class AuthorViewSet(ModelViewSet):
     queryset = Author.objects.all().order_by("-add_date")
     serializer_class = AuthorSerializer
-
-    def get_queryset(self):
-        queryset = super(AuthorViewSet, self).get_queryset()
-        return self.apply_filters(queryset)
+    filter_backends = [SimpleGenericFilter]
 
 
-class BookViewSet(ModelViewSet, SimpleGenericFilter):
+class BookViewSet(ModelViewSet):
     queryset = Book.objects.all().order_by("-add_date")
     serializer_class = BookSerializer
-
-    def get_queryset(self):
-        queryset = super(BookViewSet, self).get_queryset()
-        return self.apply_filters(queryset)
-        
+    filter_backends = [SimpleGenericFilter]

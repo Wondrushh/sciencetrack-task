@@ -1,33 +1,27 @@
 from django.core import exceptions
+from rest_framework.request import Request
 from django.db.models import QuerySet
+from rest_framework.filters import BaseFilterBackend
 
-class SimpleGenericFilter():
-    """ A simple generic filter mixin for Django Rest Framework ViewSets.
-    This mixin is used to apply filters to the queryset based on query parameters. 
+class SimpleGenericFilter(BaseFilterBackend):
+    """ A simple generic filter backend for Django Rest Framework ViewSets.
     """
-    def apply_filters(self, default_queryset) -> QuerySet:
-        """ Apply filters to the queryset based on query parameters. 
-        Used in the get_queryset method of a ViewSet.
-        
-        Example:
-        ```
-        class BookViewSet(ModelViewSet, SimpleGenericFilter):
-            queryset = Book.objects.all()
-            serializer_class = BookSerializer
+    def filter_queryset(self, request: Request, queryset: QuerySet, view) -> QuerySet:
+        """ Filters the queryset based on query parameters.
+        It inherits from BaseFilterBackend and overrides the filter_queryset method
+        to be used as a filter backend for Django Rest Framework ViewSets.
 
-            def get_queryset(self):
-                queryset = super(BookViewSet, self).get_queryset()
-                return self.apply_filters(queryset)
-        ```
-
-        :param default_queryset: The default queryset to apply filters to.
-        :type default_queryset: QuerySet
+        :param request: The request object.
+        :type request: Request
+        :param queryset: The queryset to be filtered.
+        :type queryset: QuerySet
+        :param view: The view object.
+        :type view: ModelViewSet
         :raises exceptions.BadRequest: If an invalid query parameter is provided.
         :return: The filtered queryset.
         :rtype: QuerySet
         """
-        queryset = default_queryset
-        for key, value in self.request.query_params.items():
+        for key, value in request.query_params.items():
             query_param = { key: value }
             try:
                 queryset = queryset.filter(**query_param)
