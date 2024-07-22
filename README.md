@@ -34,12 +34,13 @@ This Library Management System allows users to manage books and authors.
 
 ### Using Docker
 
-Alternatively, you can use Docker to set up the project:
+Alternatively, you can use Docker and Docker Compose to set up the project:
 
 ```bash
-docker build -t library-management .
-docker run -p 8000:8000 library-management
+docker compose up --build
 ```
+
+Your application will be available at http://localhost:8000.
 
 ## Testing
 
