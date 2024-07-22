@@ -19,8 +19,8 @@ class AuthorEndpointTests(APITestCase):
     def setUp(self) -> None:
         self.factory = APIRequestFactory()
 
-        self.user_cred = {"username": "admin", "password": "admin"}
-        self.user = User.objects.create_superuser(**self.user_cred)
+        self.user_cred = {"username": "user", "password": "password123"}
+        self.user = User.objects.create_user(**self.user_cred)
 
         # Get the token for the user
         token_response = self.client.post(reverse("token_obtain_pair"), self.user_cred)
@@ -160,7 +160,7 @@ class AuthorEndpointTests(APITestCase):
 class BookEndpointTests(APITestCase):
     def setUp(self) -> None:
         self.factory = APIRequestFactory()
-        self.user_cred = {"username": "admin", "password": "admin"}
+        self.user_cred = {"username": "user", "password": "password123"}
         self.user = User.objects.create_superuser(**self.user_cred)
 
         # Get the token for the user
