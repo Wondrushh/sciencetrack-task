@@ -18,8 +18,13 @@ from .serializers import AuthorSerializer, BookSerializer
 class AuthorEndpointTests(APITestCase):
     def setUp(self) -> None:
         self.factory = APIRequestFactory()
-        self.user = User.objects.create_superuser(username="admin", password="admin")
-        self.client.login(username="admin", password="admin")
+
+        self.user_cred = {"username": "admin", "password": "admin"}
+        self.user = User.objects.create_superuser(**self.user_cred)
+
+        # Get the token for the user
+        token_response = self.client.post(reverse("token_obtain_pair"), self.user_cred)
+        self.client.token = token_response.data["access"]
 
         # Create some objects to play with
         self.author = Author.objects.create(
@@ -35,8 +40,6 @@ class AuthorEndpointTests(APITestCase):
         response = self.client.get(url)
         authors = Author.objects.all()
         serializer = AuthorSerializer(authors, many=True, context={"request": request})
-        # print(serializer.data)
-        # print(response.data["results"])
 
         self.assertEqual(response.data["results"], serializer.data)
 
@@ -59,7 +62,9 @@ class AuthorEndpointTests(APITestCase):
         request.user = self.user
 
         # Delete the book and check if it was deleted
-        response = self.client.delete(url)
+        response = self.client.delete(
+            url, headers={"Authorization": f"Bearer {self.client.token}"}
+        )
         author_count = Author.objects.count()
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -73,7 +78,9 @@ class AuthorEndpointTests(APITestCase):
             "birth_date": "1890-01-09",
         }
         url = reverse("author-list")
-        response = self.client.post(url, new_author)
+        response = self.client.post(
+            url, new_author, headers={"Authorization": f"Bearer {self.client.token}"}
+        )
         self.assertEqual(response.status_code, 201)
 
         new_author_id = response.data["id"]
@@ -85,7 +92,11 @@ class AuthorEndpointTests(APITestCase):
         url = reverse("author-detail", args=[1])
         new_author_first_name = "Karel"
 
-        response = self.client.patch(url, {"first_name": new_author_first_name})
+        response = self.client.patch(
+            url,
+            {"first_name": new_author_first_name},
+            headers={"Authorization": f"Bearer {self.client.token}"},
+        )
         the_author = Author.objects.get(pk=1)
 
         self.assertEqual(response.status_code, 200)
@@ -100,7 +111,9 @@ class AuthorEndpointTests(APITestCase):
             "birth_date": "1890-01-09",
         }
 
-        response = self.client.put(url, new_author)
+        response = self.client.put(
+            url, new_author, headers={"Authorization": f"Bearer {self.client.token}"}
+        )
         the_author = Author.objects.get(pk=1)
 
         self.assertEqual(response.status_code, 200)
@@ -118,8 +131,8 @@ class AuthorEndpointTests(APITestCase):
 
         url = reverse("author-list")
         request = self.factory.get(url, data={"first_name__contains": "Alois"})
-
         response = self.client.get(url, data={"first_name__contains": "Alois"})
+
         authors = Author.objects.filter(first_name__contains="Alois")
         serializer = AuthorSerializer(authors, many=True, context={"request": request})
 
@@ -135,15 +148,24 @@ class AuthorEndpointTests(APITestCase):
         url = reverse("author-list")
 
         self.assertEqual(
-            self.client.post(url, new_author, format="json").status_code, 400
+            self.client.post(
+                url,
+                new_author,
+                headers={"Authorization": f"Bearer {self.client.token}"},
+            ).status_code,
+            400,
         )
 
 
 class BookEndpointTests(APITestCase):
     def setUp(self) -> None:
         self.factory = APIRequestFactory()
-        self.user = User.objects.create_superuser(username="admin", password="admin")
-        self.client.login(username="admin", password="admin")
+        self.user_cred = {"username": "admin", "password": "admin"}
+        self.user = User.objects.create_superuser(**self.user_cred)
+
+        # Get the token for the user
+        token_response = self.client.post(reverse("token_obtain_pair"), self.user_cred)
+        self.client.token = token_response.data["access"]
 
         # Create some testing db objects
         self.author = Author.objects.create(
@@ -186,9 +208,10 @@ class BookEndpointTests(APITestCase):
         url = reverse("book-detail", args=[1])
         request = self.factory.get(url)
         request.user = self.user
-
         # Delete the book and check if it was deleted
-        response = self.client.delete(url)
+        response = self.client.delete(
+            url, headers={"Authorization": f"Bearer {self.client.token}"}
+        )
         books_count = Book.objects.count()
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -203,11 +226,15 @@ class BookEndpointTests(APITestCase):
             "authors": ["/api/authors/1/"],
         }
         url = reverse("book-list")
-        response = self.client.post(url, new_book)
+        response = self.client.post(
+            url, new_book, headers={"Authorization": f"Bearer {self.client.token}"}
+        )
         self.assertEqual(response.status_code, 201)
 
         new_book_id = response.data["id"]
-        response = self.client.get(reverse("book-detail", args=[new_book_id]))
+        response = self.client.get(
+            reverse("book-detail", args=[new_book_id]),
+        )
         self.assertEqual(response.data["title"], new_book["title"])
 
     def test_partial_update_book(self):
@@ -215,7 +242,11 @@ class BookEndpointTests(APITestCase):
         url = reverse("book-detail", args=[1])
         new_book_title = "Proti všem"
 
-        response = self.client.patch(url, {"title": new_book_title})
+        response = self.client.patch(
+            url,
+            {"title": new_book_title},
+            headers={"Authorization": f"Bearer {self.client.token}"},
+        )
         the_book = Book.objects.get(pk=1)
 
         self.assertEqual(response.status_code, 200)
@@ -231,7 +262,9 @@ class BookEndpointTests(APITestCase):
             "authors": ["/api/authors/1/"],
         }
 
-        response = self.client.put(url, new_book)
+        response = self.client.put(
+            url, new_book, headers={"Authorization": f"Bearer {self.client.token}"}
+        )
         the_book = Book.objects.get(pk=1)
 
         self.assertEqual(response.status_code, 200)
@@ -244,10 +277,6 @@ class BookEndpointTests(APITestCase):
             "title": "Somebook",
             "isbn": "9788073901295",
             "pub_date": "2014-07-07",
-        }
-
-        new_book_authors = {
-            "authors": ["/api/authors/1/"],
         }
 
         new_book_obj = Book.objects.create(**new_book)
@@ -275,10 +304,14 @@ class BookEndpointTests(APITestCase):
             "authors": ["/api/authors/1/"],
         }
         url = reverse("book-list")
-
-        self.assertEqual(
-            self.client.post(url, new_book, format="json").status_code, 400
+        response = self.client.post(
+            url,
+            new_book,
+            format="json",
+            headers={"Authorization": f"Bearer {self.client.token}"},
         )
+
+        self.assertEqual(response.status_code, 400)
 
     def test_isbn_validation(self):
         """The ISBN should be valid."""
@@ -289,7 +322,9 @@ class BookEndpointTests(APITestCase):
             "authors": ["/api/authors/1/"],
         }
         url = reverse("book-list")
-        response = self.client.post(url, new_book)
+        response = self.client.post(
+            url, new_book, headers={"Authorization": f"Bearer {self.client.token}"}
+        )
 
         self.assertEqual(response.status_code, 201)
 
@@ -302,7 +337,9 @@ class BookEndpointTests(APITestCase):
             "authors": ["/api/authors/1/"],
         }
         url = reverse("book-list")
-        response = self.client.post(url, new_book)
+        response = self.client.post(
+            url, new_book, headers={"Authorization": f"Bearer {self.client.token}"}
+        )
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data["isbn"][0], "Invalid ISBN.")
@@ -316,7 +353,9 @@ class BookEndpointTests(APITestCase):
             "authors": ["/api/authors/1/"],
         }
         url = reverse("book-list")
-        response = self.client.post(url, new_book)
+        response = self.client.post(
+            url, new_book, headers={"Authorization": f"Bearer {self.client.token}"}
+        )
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data["isbn"], "9788073901295")
