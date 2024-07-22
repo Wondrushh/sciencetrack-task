@@ -9,7 +9,7 @@ from .serializers import AuthorSerializer, BookSerializer
 from .filters import SimpleGenericFilter
 
 
-class AuthorViewSet(ModelViewSet):
+class AuthorViewSet(ModelViewSet, SimpleGenericFilter):
     queryset = Author.objects.all().order_by("-add_date")
     serializer_class = AuthorSerializer
 
